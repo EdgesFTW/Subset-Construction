@@ -29,10 +29,26 @@ var waitingForClick = false;
 var HOLD_TIME = 1000; // how long will groups of highlighted nodes stay in milliseconds
 var TIME_BETWEEN_NODES = 500; // how long of a delay between highlighting nodes in milliseconds
 
+window.tmp = true;
+const timeout = async ms => new Promise(res => setTimeout(res, ms));
+window.next = false; // this is to be changed on user input
 
+
+/**
+ * Simply sends the data by telling the setConstants thread that the user has modified their values.
+ *
+ * @return None
+ */
 function sendOptions(){
     window.optionsPending = false;
 }
+
+/**
+ * Creates a thread that will unhide the options pannel to the user. When the user submits the data,
+ * the constants of this file will be set to the values specified by the user.
+ *  
+ * @return None
+ */
 async function setConstants() {
     let hold_time = document.querySelector('#HOLD_TIME');
     let time_between_nodes = document.querySelector('#TIME_BETWEEN_NODES');
@@ -44,19 +60,22 @@ async function setConstants() {
     while(window.optionsPending == true){
         await timeout(50); // pauses script
     }
+
     options.hidden = true;
 
     HOLD_TIME = hold_time.value;
     TIME_BETWEEN_NODES = time_between_nodes.value;
 
-    console.log(TIME_BETWEEN_NODES)
-
 
 }
 
-window.tmp = true;
 
-function draw(milliseconds) {
+/**
+ * Draws all of the data about the NFA(nodelist1) and our DFA(nodelist2)
+ *
+ * @return None
+ */
+function draw() {
 
     if(!window.waitingForClick)
     {
@@ -171,20 +190,29 @@ function draw(milliseconds) {
 
     requestAnimationFrame(draw)
 }
-async function setup(event) {
+
+/**
+ * Setup function that will be called when the page loads. 
+ * Sets up an example NFA in nodelist1.
+ * Adds listeners for mouse input to the window.
+ * Begins drawing at the end of function.
+ *
+ * @return None
+ */
+async function setup() {
     window.options = document.querySelector('#options');
     window.text = document.querySelector('#text');
     window.canvas1 = document.querySelector('#canvas1');
     window.canvas2 = document.querySelector('#canvas2');
     ctx1 = window.canvas1.getContext('2d');
     ctx2 = window.canvas2.getContext('2d');
-    window.canvas1.width = document.body.clientWidth/2;
-    window.canvas1.height = document.body.clientHeight;
-    window.canvas2.width = document.body.clientWidth/2;
-    window.canvas2.height = document.body.clientHeight;
+    window.canvas1.width = document.body.clientHeight/2;
+    window.canvas1.height = document.body.clientHeight/2;
+    window.canvas2.width = document.body.clientHeight/2;
+    window.canvas2.height = document.body.clientHeight/2;
     
-    width = document.body.clientWidth/2;
-    height = document.body.clientWidth/2;
+    width = document.body.clientHeight/2;
+    height = document.body.clientHeight/2;
     node_list1.set("0",{id:"0", x: -0.5, y: -0.5, starting: false, accepting: false, radius: 1/4, nexts: [{t:"e",val:"1"},{t:"1",val:"3"}]});
     node_list1.set("1",{id:"1", x: 0.0, y: 0.0, starting: true, accepting: false, radius: 1/4, nexts: [{t:"e",val:"2"},{t:"0",val:"3"}]});
     node_list1.set("2",{id:"2", x: 0.7, y: -0.2, starting: false, accepting: false, radius: 1/4, nexts: [{t:"1",val:"4"}]});
@@ -212,7 +240,7 @@ async function setup(event) {
         let x2 = (event.clientX - can2.left)*2/width-1;
         let y2 = (event.clientY - can2.top)*2/height-1;
         
-        
+        // check if node exists in list1
         for(const node of node_list1){
             let dx = x1 - node[1].x;
             let dy = y1 - node[1].y;
@@ -221,6 +249,7 @@ async function setup(event) {
                 grabbed_node = node[1];
             }
         }
+        // check if node exists in list2
         for(const node of node_list2){
             let dx = x2 - node[1].x;
             let dy = y2 - node[1].y;
@@ -231,7 +260,6 @@ async function setup(event) {
         }
         
         window.next = true;
-        // console.log(next)
 
     }));
     window.addEventListener("mouseup",(event =>{
@@ -253,29 +281,43 @@ async function setup(event) {
     requestAnimationFrame(draw)
 }
 
+/**
+ * Called when the window size changes.
+ * Will channge html elements of page as well as constants used for graphics computatation
+ * 
+ * @return None
+ */
 function resizeCanvas() {
-    window.canvas1.width = document.body.clientWidth/2;
-    window.canvas1.height = document.body.clientWidth/2;
-    // window.canvas1.height = window.innerHeight;
-    window.canvas2.width = document.body.clientWidth/2;
-    window.canvas2.height = document.body.clientWidth/2;
-    // window.canvas2.height = window.innerHeight;
-    width = document.body.clientWidth/2;
-    height = document.body.clientWidth/2;
+    /* HTML elements */
+    window.canvas1.width = document.body.clientHeight/2;
+    window.canvas1.height = document.body.clientHeight/2;
+    window.canvas2.width = document.body.clientHeight/2;
+    window.canvas2.height = document.body.clientHeight/2;
+
+    /* Global Math Variables */
+    width = document.body.clientHeight/2;
+    height = document.body.clientHeight/2;
 }
 
-const timeout = async ms => new Promise(res => setTimeout(res, ms));
-window.next = false; // this is to be changed on user input
-// window.waitingForClick = false;
-
+/**
+ * Will wait for a user to click on a node either in the NFA or DFA
+ *
+ * @return None
+ */
 async function waitUserInput() {
     while (window.next === false) {
-        // console.log('spinning')
         await timeout(50); // pauses script
     }
     window.next = false; // reset var
 }
 
+
+/**
+ * Flips the "starting state" attribute of a node of the NFA.
+ * Allows the user to modify the NFA by clicking with the mouse.
+ *
+ * @return None
+ */
 async function changeStarting(){
     text.innerHTML = "Click node to make it the starting node!";
     
@@ -303,6 +345,13 @@ async function changeStarting(){
     text.innerHTML = "Transitions to nowhere imply transitions to a trash state";
 }
 
+
+/**
+ * Flips the "accepting state" attribute of a node of the NFA.
+ * Allows the user to modify the NFA by clicking with the mouse.
+ *
+ * @return None
+ */
 async function toggleAccepting(){
 
     text.innerHTML = "Click node to toggle accepting node!";
@@ -329,6 +378,12 @@ async function toggleAccepting(){
 
 }
 
+
+/**
+ * Removes a node from the NFA if the user clicks on it
+ *
+ * @return None
+ */
 async function delNode(){
     text.innerHTML = "Click node to remove it!";
     
@@ -360,6 +415,13 @@ async function delNode(){
     
 }
 
+
+/**
+ * Places a node where the user clicks. Subsequent dialoge walks the user 
+ * through what attributes to assign new node
+ * 
+ * @return None
+ */
 async function addNode(){
     text.innerHTML = "Click location to add node";
     
@@ -391,6 +453,12 @@ async function addNode(){
     
 }
 
+/**
+ * Waits for the user to grab a node in either the NFA or DFA
+ * 
+ * @return {Object} node object on success
+ * @return {Number} -1 on failure
+ */
 async function waitUserToSelectNode() {
     while (window.grabbed_node === undefined) {
         if(window.esc){
@@ -403,6 +471,13 @@ async function waitUserToSelectNode() {
     return ret;
 }
 
+
+/**
+ * Removes a transition from the source node that the user selects by clicking on it.
+ * Subsequent dialogue will ask user to select the transition that they wish to remove.
+ * 
+ * @return None
+ */
 async function rmTransition(){ // refactor to alow users to choose the index of the transition instead of the character
     text.innerHTML = "Click state to select transition's source";
     
@@ -462,6 +537,13 @@ async function rmTransition(){ // refactor to alow users to choose the index of 
     text.innerHTML = "Transitions to nowhere imply transitions to a trash state";
 
 }
+
+/**
+ * Adds a transition from the source node that the user selects by clicking on it.
+ * Subsequent dialogue will ask user to select the transition that they wish to add and the id of its destination node.
+ *
+ * @return None
+ */
 async function addTransition(){
     text.innerHTML = "Click state to select new transition's source";
     
@@ -476,7 +558,6 @@ async function addTransition(){
         return;
     }
     window.waitingForClick = false;
-    // console.log(source)
 
     text.innerHTML = "Click state to select new transition's destination";
     
@@ -527,12 +608,19 @@ async function addTransition(){
     text.innerHTML = "Transitions to nowhere imply transitions to a trash state";
 
 
-    // let x = mouse.x1;
-    // let y = mouse.y1;
-
-    // id = prompt("Node ID:",id)
 }
 
+
+/**
+ * Used by the draw function, draws the transitions between nodes with an arrow indicating the direction
+ *
+ * @param {Object} node The source node to draw transtions from.
+ * @param {Object} dest The destination node to draw transtions to.
+ * @param {String} color The color of the transtion.
+ * @param {Character} t The character of the transtion.
+ * @param {CanvasRenderingContext2D} ctx The context of the respective canvas being drawn to.
+ * @return None
+ */
 function drawTransition(node,dest,color,t,ctx){
     
     if(dest==null){
@@ -568,18 +656,6 @@ function drawTransition(node,dest,color,t,ctx){
     let cp2 = cp1;
     
 
-    /* bezier curve */
-    // ctx.beginPath();
-    // ctx.moveTo((nodeX+1)*width/2, (nodeY+1)*height/2);
-    // ctx.bezierCurveTo((cp1.x+1)*width/2, (cp1.y+1)*height/2, (cp2.x+1)*width/2, (cp2.y+1)*height/2, (destX+1)*width/2, (destY+1)*height/2);
-    // ctx.stroke();
-
-    // ctx.fillStyle = "red";
-    // ctx.beginPath();
-    // ctx.arc((cp1.x+1)*width/2, (cp1.y+1)*height/2, 5, 0, 2 * Math.PI); // Control point one
-    // ctx.arc((cp2.x+1)*width/2, (cp2.y+1)*height/2, 5, 0, 2 * Math.PI); // Control point two
-    // ctx.fill();
-
     // draw arrow line
     ctx.lineWidth = 1;
     ctx.strokeStyle  = "#000000";
@@ -606,7 +682,17 @@ function drawTransition(node,dest,color,t,ctx){
     return;
 }
 
-function dfs(nodelist,startNode,transition,boolean_descriptors){
+
+/**
+ * Performs a DFS search on the the NFA to determine what nodes are connected via a specific transition character.
+ * 
+ *
+ * @param {ObjectList} nodelist The list of connected nodes to be constructed.
+ * @param {Object} startNode The node that the search should start at.
+ * @param {Character} transition The character of the transtion.
+ * @return None
+ */
+function dfs(nodelist,startNode,transition){
     let stack = [];
     let currNode = {};
     stack.push(startNode);
@@ -627,6 +713,14 @@ function dfs(nodelist,startNode,transition,boolean_descriptors){
     }
 }
 
+
+/**
+ * Function is called in order to create initial DFA states from the NFA before accounting for transitions from aforementioned intital states.
+ * Runs DFS using the epsilon transition in order to determine which nodes are considered a subset state
+ * 
+ * @param  {Object} node The node to start searching for subset state from.
+ * @return {Object} The new node that is part of the DFA
+ */
 function createState(node){
     let nodeList = []
 
@@ -655,7 +749,6 @@ function createState(node){
     x = x/nodeList.length;
     y = y/nodeList.length;
 
-    // console.log(String(nodeList.join(",")),nodeList)
 
     if(nodeList.some( (n) => {return node_list1.get(n).accepting;})){
         boolean_descriptors.accepting_node = true;
@@ -668,6 +761,12 @@ function createState(node){
 }
 
 
+/**
+ * Runs the algorithim for subset construction on the NFA(nodelist1) and stores the DFA in nodelist2.
+ * Runs Algorithim piece by piece in the animation section of this function.
+ *
+ * @return None
+ */
 async function subsetConstruction(){
     let newNodeList = []; // used to replace node_list1
     let nodeListFull = []; // used for translating transitions 
@@ -753,7 +852,6 @@ async function subsetConstruction(){
             ele.accepting = replaced_node.accepting;
             ele.starting = replaced_node.starting;
         }
-        // console.log(node_list2.get(ele.id),ele)
         node_list2.set(ele.id,ele);
         text.innerHTML = "State(s) have been combined into 1 new state";
         await new Promise(resolve => {
@@ -777,13 +875,8 @@ async function subsetConstruction(){
 }
   
 window.addEventListener("resize", resizeCanvas);
-  
-
 window.addEventListener('load',setup)
 window.addEventListener('keydown',(key) => {
-
-    // console.log(key.code,false)
-
     // if(key.code=="Escape"){
     //     // console.log("kek1")
     //     if(window.next == false){

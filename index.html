@@ -15,7 +15,7 @@
 		}
 	</style>
 </head>
-<body data-new-gr-c-s-check-loaded="8.904.0" data-gr-ext-installed="" style="margin-bottom: 8px !important;">
+<body data-new-gr-c-s-check-loaded="8.904.0" data-gr-ext-installed="" style="text-align:center; margin-bottom: 8px !important;">
 	<button onclick="subsetConstruction()">Transform</button>
 	<button onclick="setConstants()">Transform Options</button>
 	<button onclick="delNode()">Delete State</button>
@@ -24,7 +24,6 @@
 	<button onclick="rmTransition()">Remove Transition</button>
 	<button onclick="changeStarting()">Change Starting Node</button>
 	<button onclick="toggleAccepting()">Toggle Accepting node</button>
-	<!-- <button onclick="rmTransition()">View </button> -->
 	<div id="options" hidden>
 		<div>
 			<label for="HOLD_TIME">how long will groups of highlighted nodes stay in milliseconds:</label>
@@ -37,8 +36,10 @@
 		<button id="optionsButton" onclick="sendOptions()">Confirm Options</button>
 	</div>
 	<div id="text" style="font-size: 150%;"></div>
-	<div class="container">
+	<div style = "text-align:center;">
 		<canvas id="canvas1"></canvas>
+	</div>
+	<div style = "text-align:center;">
 		<canvas id="canvas2"></canvas>
 	</div>
 </body>
